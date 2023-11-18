@@ -47,9 +47,9 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     }
 
     private fun addMoveActionsToBlimp() {
-        val verticalPositionBlimp: Float = 768 * 0.75f
+        val verticalPositionBlimp: Float = 480 * 0.75f
         blimp!!.setPosition(0f, verticalPositionBlimp)
-        val endOfTheScreenRight: Float = 1024f - blimp!!.width
+        val endOfTheScreenRight: Float = 640 - blimp!!.width
         val endOfTheScreenLeft = 0f
         val forth: MoveToAction = moveTo(endOfTheScreenRight, verticalPositionBlimp, 7f)
         val back: MoveToAction = moveTo(endOfTheScreenLeft, verticalPositionBlimp, 7f)

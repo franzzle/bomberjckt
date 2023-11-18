@@ -15,7 +15,7 @@ class Blimp : Actor(), Disposable {
     val direction: Vector2
 
     init {
-        val format = "blimp@1x.png"
+        val format = "plane.png"
         blimpTexture = Texture(Gdx.files.internal(format))
         blimpSprite = Sprite(blimpTexture)
         width = blimpSprite.width
