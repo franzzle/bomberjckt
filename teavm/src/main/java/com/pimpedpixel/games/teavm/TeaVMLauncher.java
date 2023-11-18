@@ -15,6 +15,7 @@ import com.pimpedpixel.games.BomberJcktGame;
 public class TeaVMLauncher {
     public static void main(String[] args) {
         TeaApplicationConfiguration config = new TeaApplicationConfiguration("canvas");
+        config.useNativePixmap = true;
         // change these to both 0 to use all available space, or both -1 for the canvas size.
         config.width = 1024;
         config.height = 768;
