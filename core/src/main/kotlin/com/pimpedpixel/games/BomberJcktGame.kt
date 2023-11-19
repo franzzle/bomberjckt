@@ -6,7 +6,6 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.scenes.scene2d.Action
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction
@@ -56,8 +55,6 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
         val flipAction = FlipAction(blimp!!)
         blimp!!.addAction(forever(sequence(forth, flipAction, back, flipAction)))
     }
-
-
 
     override fun render() {
         Gdx.gl.glClearColor(backgroundColor!!.r, backgroundColor!!.g, backgroundColor!!.b, 1f)

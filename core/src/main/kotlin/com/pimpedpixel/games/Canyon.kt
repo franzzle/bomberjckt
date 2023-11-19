@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.scenes.scene2d.Actor
 
-//Original 40 total width with 8 pixel wide bricks
+//Original 40 total width with 16 pixel wide bricks
 //Original 12 layers with 8 pixel high bricks leaving
 class Canyon(private val canyonStateListener: CanyonStateListener, canyonLayoutPattern: String?) : Actor() {
     private val canyonLayout: List<List<Brick>>
