@@ -6,7 +6,9 @@ import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.scenes.scene2d.Stage
+import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction
 import com.pimpedpixel.games.hud.FrameRate
@@ -46,14 +48,25 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     }
 
     private fun addMoveActionsToBlimp() {
-        val verticalPositionBlimp: Float = Gdx.app.graphics.height.toFloat() * 0.75f
-        blimp!!.setPosition(0f, verticalPositionBlimp)
-        val endOfTheScreenRight: Float = Gdx.app.graphics.width.toFloat() - blimp!!.width
-        val endOfTheScreenLeft = 0f
-        val forth: MoveToAction = moveTo(endOfTheScreenRight, verticalPositionBlimp, 7f)
-        val back: MoveToAction = moveTo(endOfTheScreenLeft, verticalPositionBlimp, 7f)
+        val screenHeight = Gdx.graphics.height.toFloat()
+        val blimpWidth = blimp!!.width
+        val startY = screenHeight * 0.7f
+        val endY = screenHeight * 0.8f
+        val endX = -blimpWidth  // Move the blimp to the left of the screen
+
+        // Randomly generate the vertical position within the specified range
+        val randomY = startY + MathUtils.random() * (endY - startY)
+
+        blimp!!.setPosition(Gdx.graphics.width.toFloat(), randomY)
+
+        val forth: MoveToAction = moveTo(endX, randomY, 7f)
         val flipAction = FlipAction(blimp!!)
-        blimp!!.addAction(forever(sequence(forth, flipAction, back, flipAction)))
+
+        // When the blimp reaches the left side, move it to the right to reset
+        val reset: MoveToAction = moveTo(Gdx.graphics.width.toFloat(), randomY, 0f)
+
+        blimp!!.addAction(sequence(forth, flipAction, reset, flipAction, delay(1f), // Add a delay for better visibility
+            Actions.run { addMoveActionsToBlimp() }))  // Recursively call the function to repeat the behavior
     }
 
     override fun render() {
