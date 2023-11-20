@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction
+import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction
 import com.pimpedpixel.games.hud.FrameRate
 import com.pimpedpixel.games.scoring.GameState
 import com.pimpedpixel.games.scoring.GameStateListener
@@ -48,26 +49,30 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     }
 
     private fun addMoveActionsToBlimp() {
-        val screenHeight = Gdx.graphics.height.toFloat()
         val blimpWidth = blimp!!.width
-        val startY = screenHeight * 0.7f
-        val endY = screenHeight * 0.8f
-        val endX = -blimpWidth  // Move the blimp to the left of the screen
+        val screenHeight = Gdx.graphics.height.toFloat()
 
         // Randomly generate the vertical position within the specified range
-        val randomY = startY + MathUtils.random() * (endY - startY)
+        val startY = screenHeight * 0.7f
+        val endY = screenHeight * 0.8f
+        var randomY = startY + MathUtils.random() * (endY - startY)
 
-        blimp!!.setPosition(Gdx.graphics.width.toFloat(), randomY)
+        blimp!!.setPosition(-blimpWidth, randomY)
 
-        val forth: MoveToAction = moveTo(endX, randomY, 7f)
-        val flipAction = FlipAction(blimp!!)
+        val forth: MoveToAction = moveTo(Gdx.graphics.width.toFloat(), randomY, 7f)
 
-        // When the blimp reaches the left side, move it to the right to reset
-        val reset: MoveToAction = moveTo(Gdx.graphics.width.toFloat(), randomY, 0f)
+        // When the blimp reaches the right side, reset its position to the left
+        val reset: RunnableAction = Actions.run {
+            randomY = startY + MathUtils.random() * (endY - startY)
+            Gdx.app.log("","Moving to $randomY")
+            blimp!!.setPosition(-blimpWidth, randomY)
+        }
 
-        blimp!!.addAction(sequence(forth, flipAction, reset, flipAction, delay(1f), // Add a delay for better visibility
+        blimp!!.addAction(sequence(forth, reset, delay(1f), // Add a delay for better visibility
             Actions.run { addMoveActionsToBlimp() }))  // Recursively call the function to repeat the behavior
     }
+
+
 
     override fun render() {
         Gdx.gl.glClearColor(backgroundColor!!.r, backgroundColor!!.g, backgroundColor!!.b, 1f)
