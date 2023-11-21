@@ -44,4 +44,8 @@ class GameProperties(type: String) {
     fun getPropAsColor(key: String): Color {
         return Color.valueOf(objectMap.get(key))
     }
+
+    fun getKeyValuePairs(): ObjectMap<String, String> {
+        return objectMap
+    }
 }

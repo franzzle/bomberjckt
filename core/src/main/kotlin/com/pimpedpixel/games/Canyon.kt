@@ -2,6 +2,7 @@ package com.pimpedpixel.games
 
 import CanyonGrid
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Rectangle
@@ -9,7 +10,9 @@ import com.badlogic.gdx.scenes.scene2d.Actor
 
 //Original 40 total width with 16 pixel wide bricks
 //Original 12 layers with 8 pixel high bricks leaving
-class Canyon(private val canyonStateListener: CanyonStateListener, canyonLayoutPattern: String?) : Actor() {
+class Canyon(private val canyonStateListener: CanyonStateListener,
+             canyonLayoutPattern: String?,
+    assetManager: AssetManager) : Actor() {
     private val canyonLayout: List<List<Brick>>
     private val sizeOfSideOfOneBrick: Int
     private val boundingRectPlayfield: Rectangle
@@ -37,13 +40,12 @@ class Canyon(private val canyonStateListener: CanyonStateListener, canyonLayoutP
         canyonGrid.grid.forEachIndexed { rowIndex, row ->
             val bricks = ArrayList<Brick>()
             canyonLayout.add(bricks)
-            row.forEachIndexed { columnIndex, brickColorHex ->
+            row.forEachIndexed { columnIndex, brickColorTextureFileName ->
                 val brick = Brick()
                 brick.width = sizeOfSideOfOneBrick
                 brick.height = sizeOfSideOfOneBrick
-                brick.brickColourHex = brickColorHex
-                brick.setColor(Color.valueOf(brick.brickColourHex!!))
-                val outerWall = brickColorHex.equals("#6B6D6B")
+                brick.brickColorTextureFileName = brickColorTextureFileName
+                val outerWall = brickColorTextureFileName.equals("brickcolor0.png")
                 if (!outerWall) {
                     totalNumberOfDestroyableBricksInCanyon++
                 }
@@ -58,7 +60,7 @@ class Canyon(private val canyonStateListener: CanyonStateListener, canyonLayoutP
 
         for (bricks in canyonLayout) {
             for (brick in bricks) {
-                brick.initGraphics()
+                brick.initGraphics(assetManager = assetManager)
             }
         }
     }
@@ -114,20 +116,20 @@ class Canyon(private val canyonStateListener: CanyonStateListener, canyonLayoutP
             }
         }
 
-        // TODO Make OOP and then events
-        if (numberOfDestroyableBricksThatAreDestroyed == totalNumberOfDestroyableBricksInCanyon) {
-            canyonStateListener.canyonStateChanged(CanyonState.ALL_BRICKS_DESTROYED)
-        }
-        if (newBricksDestroyed > 0) {
-            canyonStateListener.scoringStateChanged(ScoringStateEnum.HIT)
-        } else if (outerwallHit > 0 && !bomb.hasHitSomething()) {
-            val message = "Miss by hitting outer wall and bomb hit is ${bomb.numberOfBricksDestroyed}"
-            Gdx.app.log(this.javaClass.getSimpleName(), message)
-            canyonStateListener.scoringStateChanged(ScoringStateEnum.MISS)
-        } else if (!bomb.boundingRectangle.overlaps(boundingRectPlayfield)) {
-            Gdx.app.log(this.javaClass.getSimpleName(), "Miss by leaving the field")
-            canyonStateListener.scoringStateChanged(ScoringStateEnum.MISS)
-        }
+        // TODO Make Box2D work with Canyon and Bomb
+//        if (numberOfDestroyableBricksThatAreDestroyed == totalNumberOfDestroyableBricksInCanyon) {
+//            canyonStateListener.canyonStateChanged(CanyonState.ALL_BRICKS_DESTROYED)
+//        }
+//        if (newBricksDestroyed > 0) {
+//            canyonStateListener.scoringStateChanged(ScoringStateEnum.HIT)
+//        } else if (outerwallHit > 0) {
+//            val message = "Miss by hitting outer wall and bomb hit is ${bomb.numberOfBricksDestroyed}"
+//            Gdx.app.log(this.javaClass.getSimpleName(), message)
+//            canyonStateListener.scoringStateChanged(ScoringStateEnum.MISS)
+//        } else if (!bomb.boundingRectangle.overlaps(boundingRectPlayfield)) {
+//            Gdx.app.log(this.javaClass.getSimpleName(), "Miss by leaving the field")
+//            canyonStateListener.scoringStateChanged(ScoringStateEnum.MISS)
+//        }
     }
 
     fun restoreAllBricks() {

@@ -17,6 +17,9 @@ interface GameStateService {
      * Misses is set to 0
      */
     fun resetGameState()
+
+    fun activateBomb()
+
     val score: String?
     val gameState: GameState?
 

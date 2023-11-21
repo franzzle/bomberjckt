@@ -1,7 +1,7 @@
 package com.pimpedpixel.games
 
+import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
-import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.Sprite
@@ -31,23 +31,11 @@ class Brick : Disposable {
     @JvmField
     var height = 0
     @JvmField
-    var brickColourHex: String? = null
+    var brickColorTextureFileName: String? = null
 
-    fun initGraphics() {
-        if (textureCache == null) {
-            textureCache = HashMap()
-        }
-        val brickPixMap = Pixmap(width, height, Pixmap.Format.RGBA8888)
-        brickPixMap.setColor(color)
-        brickPixMap.fill()
-        if (textureCache!![color] != null) {
-            textureBrick = textureCache!![color]
-        } else {
-            textureBrick = Texture(brickPixMap)
-            textureCache!![color] = textureBrick
-        }
-        brickPixMap.dispose()
-        brickSprite = Sprite(textureBrick)
+    fun initGraphics(assetManager: AssetManager) {
+
+        brickSprite = Sprite(assetManager.get(this.brickColorTextureFileName, BrickTexture::class.java).texture)
         brickSprite!!.setPosition(x.toFloat(), y.toFloat())
     }
 

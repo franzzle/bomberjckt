@@ -10,7 +10,7 @@ class CanyonGrid(
     init {
         layout.layoutLines.forEachIndexed { columnIndex, line ->
             line.forEachIndexed { rowIndex, char ->
-                grid[rowIndex][columnIndex] = colorProperties.getPropAsString("brickcolor$char")
+                grid[rowIndex][columnIndex] = "brickcolor$char.png"
             }
         }
     }

@@ -12,7 +12,7 @@ class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor
         if (keycode == Input.Keys.SPACE) {
             if (gameStateService.gameState.isStarted) {
                 Gdx.app.log("", "Drop bomb")
-//                dropBombIfAllowedTo()
+                dropBombIfAllowedTo()
             } else {
                 startGame()
             }
@@ -30,18 +30,13 @@ class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor
     }
 
     private fun dropBombIfAllowedTo() {
-//        if (game.gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb) {
-//            throwBomb()
-//            game.gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb = false
-//        }
+        if (gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb) {
+            gameStateService!!.activateBomb()
+        }
     }
 
     private fun throwBomb() {
-//        val bombSpawnPosition = Vector2(
-//            game.blimp!!.x + game.blimp!!.width * 0.5f,
-//            game.blimp!!.y + game.blimp!!.height * 0.5f
-//        )
-//        game.bomb!!.bombThrown(bombSpawnPosition, game.blimp!!.direction)
+
     }
 
     override fun keyUp(keycode: Int): Boolean {

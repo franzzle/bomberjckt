@@ -43,6 +43,11 @@ class GameStateServiceImpl(gameStateListener: GameStateListener) : GameStateServ
         this.gameState.numberOfMisses = 0
     }
 
+    override fun activateBomb() {
+
+        this.gameStateListener.gameStateChanged(gameState)
+    }
+
     fun update() {
         if (gameState.isFinished) {
             elapsedTimeSinceGameFinished += Gdx.graphics.deltaTime

@@ -3,10 +3,14 @@ package com.pimpedpixel.games
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.math.MathUtils
+import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
+import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
@@ -23,9 +27,16 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     private var hudBatch: SpriteBatch? = null
     private var stage: Stage? = null
     private var blimp: Blimp? = null
+    private var bombPool: BombPool? = null
     private var canyon: Canyon? = null
     private var backgroundColor: Color? = null
     private var frameRate: FrameRate? = null
+    private val assetmanager: AssetManager = AssetManager()
+    private var world: World? = null
+    private var debugRenderer: Box2DDebugRenderer? = null
+
+    private val activeBombs: MutableList<Bomb> = mutableListOf() // List to track active bombs
+
 
     override fun create() {
         val colorBlueSky = "#7382f7"
@@ -33,13 +44,21 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
 
         batch = SpriteBatch()
         hudBatch = SpriteBatch()
+
+        BrickAssetloader(assetmanager).load()
+
+        world = World(Vector2(0f, -1.0f), true)
+        bombPool = BombPool(world!!) // Initialize the bomb pool
+        debugRenderer = Box2DDebugRenderer()
+
         stage = Stage()
         blimp = Blimp()
         addMoveActionsToBlimp()
         stage?.addActor(blimp)
-        canyon = Canyon(this, "canyon")
+        canyon = Canyon(this, "canyon", assetmanager)
         stage?.addActor(canyon)
 
+        // Details state transitions
         val gameStateServiceImpl = GameStateServiceImpl(this)
         val inputMultiplexer = InputMultiplexer()
         inputMultiplexer.addProcessor(Input(gameStateServiceImpl))
@@ -75,6 +94,20 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
 
 
     override fun render() {
+        // Step the physics simulation
+        world!!.step(1 / 60f, 2, 1)
+
+        val iterator = activeBombs.iterator()
+        while (iterator.hasNext()) {
+            val bomb = iterator.next()
+            if (bomb.isOffScreen()) {
+                // Remove bomb from the stage, free it back to the pool, and remove from the active list
+                stage?.root?.removeActor(bomb)
+                bombPool?.freeBomb(bomb)
+                iterator.remove()
+            }
+        }
+
         Gdx.gl.glClearColor(backgroundColor!!.r, backgroundColor!!.g, backgroundColor!!.b, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         batch!!.begin()
@@ -89,6 +122,8 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
 
         frameRate!!.update()
         frameRate!!.render()
+
+        debugRenderer?.render(world, stage!!.camera.combined)
     }
 
     override fun dispose() {
@@ -96,7 +131,22 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     }
 
     override fun gameStateChanged(gameState: GameState?) {
-        Gdx.app.log("", "gameStateChanged")
+        // Obtain a bomb from the pool
+        val bomb = bombPool?.obtainBomb()
+
+        // Set the bomb's position and velocity as needed
+        val bombBody = bomb?.bombBody
+        bombBody?.isActive = true
+        val currentVerticalVelocity = bombBody?.linearVelocity?.y ?: 0f
+        val horizontalVelocity = 0.2f // Adjust this value as needed
+        bombBody?.linearVelocity = Vector2(horizontalVelocity, currentVerticalVelocity)
+        bombBody?.setTransform(blimp!!.x / PIXELS_PER_METER, blimp!!.y / PIXELS_PER_METER, 0f)
+
+        bomb?.isVisible = true
+
+        // Add the bomb to the stage and the list of active bombs
+        stage?.addActor(bomb)
+        activeBombs.add(bomb!!)
     }
 
     override fun canyonStateChanged(canyonState: CanyonState?, brick: Brick?, bomb: Bomb?) {
