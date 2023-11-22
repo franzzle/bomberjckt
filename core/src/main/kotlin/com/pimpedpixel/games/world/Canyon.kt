@@ -1,18 +1,21 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
-import CanyonGrid
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetManager
-import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.math.Rectangle
+import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Actor
+import com.pimpedpixel.games.GameProperties
 
 //Original 40 total width with 16 pixel wide bricks
 //Original 12 layers with 8 pixel high bricks leaving
-class Canyon(private val canyonStateListener: CanyonStateListener,
-             canyonLayoutPattern: String?,
-    assetManager: AssetManager) : Actor() {
+class Canyon(
+    private val world: World,
+    private val canyonStateListener: CanyonStateListener,
+    canyonLayoutPattern: String?,
+    assetManager: AssetManager
+) : Actor() {
     private val canyonLayout: List<List<Brick>>
     private val sizeOfSideOfOneBrick: Int
     private val boundingRectPlayfield: Rectangle
@@ -41,7 +44,7 @@ class Canyon(private val canyonStateListener: CanyonStateListener,
             val bricks = ArrayList<Brick>()
             canyonLayout.add(bricks)
             row.forEachIndexed { columnIndex, brickColorTextureFileName ->
-                val brick = Brick()
+                val brick = Brick(world)
                 brick.width = sizeOfSideOfOneBrick
                 brick.height = sizeOfSideOfOneBrick
                 brick.brickColorTextureFileName = brickColorTextureFileName
@@ -63,6 +66,14 @@ class Canyon(private val canyonStateListener: CanyonStateListener,
                 brick.initGraphics(assetManager = assetManager)
             }
         }
+
+        val name = this.javaClass.simpleName
+        Gdx.app.log(name, "Total number of destroyable bricks $totalNumberOfDestroyableBricksInCanyon")
+        val wallBricks = (canyon.height * canyon.width) - totalNumberOfDestroyableBricksInCanyon
+        Gdx.app.log(name, "Total number of wall bricks $wallBricks")
+        Gdx.app.log(name, "Width of bricks in canyon $canyon.width")
+        Gdx.app.log(name, "Height of bricks in canyon $canyon.height")
+
     }
 
     @Override

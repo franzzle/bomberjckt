@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 class CanyonLayout(
     @JvmField var layoutLines: List<String> = emptyList(),

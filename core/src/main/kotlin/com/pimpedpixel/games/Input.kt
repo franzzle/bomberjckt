@@ -11,7 +11,7 @@ class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor
     override fun keyDown(keycode: Int): Boolean {
         if (keycode == Input.Keys.SPACE) {
             if (gameStateService.gameState.isStarted) {
-                Gdx.app.log("", "Drop bomb")
+//                Gdx.app.log("", "Drop bomb")
                 dropBombIfAllowedTo()
             } else {
                 startGame()

@@ -1,17 +1,16 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.assets.AssetDescriptor
 import com.badlogic.gdx.assets.AssetLoaderParameters
 import com.badlogic.gdx.assets.AssetManager
-import com.badlogic.gdx.assets.loaders.AsynchronousAssetLoader
 import com.badlogic.gdx.assets.loaders.SynchronousAssetLoader
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
 import com.badlogic.gdx.files.FileHandle
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.utils.Array
-import com.pimpedpixel.games.BrickTextureLoader.BrickTextureParameter
+import com.pimpedpixel.games.world.BrickTextureLoader.BrickTextureParameter
 
 class BrickTextureLoader(resolver: InternalFileHandleResolver?) :
     SynchronousAssetLoader<BrickTexture?, BrickTextureParameter?>(resolver) {

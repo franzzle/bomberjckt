@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 enum class CanyonState {
     BRICK_DESTROYED,

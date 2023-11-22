@@ -44,7 +44,6 @@ class GameStateServiceImpl(gameStateListener: GameStateListener) : GameStateServ
     }
 
     override fun activateBomb() {
-
         this.gameStateListener.gameStateChanged(gameState)
     }
 

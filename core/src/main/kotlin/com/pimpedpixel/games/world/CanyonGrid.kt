@@ -1,4 +1,5 @@
-import com.pimpedpixel.games.CanyonLayout
+package com.pimpedpixel.games.world
+
 import com.pimpedpixel.games.GameProperties
 
 class CanyonGrid(

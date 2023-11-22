@@ -1,5 +1,6 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
+import com.pimpedpixel.games.ScoringStateEnum
 import java.util.*
 
 interface CanyonStateListener : EventListener {

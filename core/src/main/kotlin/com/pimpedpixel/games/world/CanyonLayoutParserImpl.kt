@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle

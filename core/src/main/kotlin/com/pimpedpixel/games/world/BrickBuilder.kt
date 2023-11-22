@@ -1,8 +1,9 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.physics.box2d.World
 
-class BrickBuilder {
+class BrickBuilder(private val world: World) {
     private var color: Color? = null
     private var widthOfOneBrick = 0
     private var heightOfOneBrick = 0
@@ -37,7 +38,7 @@ class BrickBuilder {
     }
 
     fun build(): Brick {
-        val brick = Brick()
+        val brick = Brick(world)
         brick.width = widthOfOneBrick
         brick.height = heightOfOneBrick
         brick.isOuterWall = isOuterWall

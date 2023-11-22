@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
@@ -7,56 +7,57 @@ import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
-import com.badlogic.gdx.math.MathUtils
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.badlogic.gdx.scenes.scene2d.actions.Actions
-import com.badlogic.gdx.scenes.scene2d.actions.Actions.*
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction
-import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction
+import com.pimpedpixel.games.Input
+import com.pimpedpixel.games.ScoringStateEnum
 import com.pimpedpixel.games.hud.FrameRate
 import com.pimpedpixel.games.scoring.GameState
 import com.pimpedpixel.games.scoring.GameStateListener
 import com.pimpedpixel.games.scoring.GameStateServiceImpl
 
-/** [com.badlogic.gdx.ApplicationListener] implementation shared by all platforms.  */
 class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListener {
     private var batch: SpriteBatch? = null
     private var hudBatch: SpriteBatch? = null
     private var stage: Stage? = null
-    private var blimp: Blimp? = null
+    private var flyingMachine: FlyingMachine? = null
     private var bombPool: BombPool? = null
     private var canyon: Canyon? = null
-    private var backgroundColor: Color? = null
+    private var backgroundColor: Color = Color.valueOf("#7382f7")
     private var frameRate: FrameRate? = null
-    private val assetmanager: AssetManager = AssetManager()
+    private val assetManager: AssetManager = AssetManager()
     private var world: World? = null
     private var debugRenderer: Box2DDebugRenderer? = null
 
     private val activeBombs: MutableList<Bomb> = mutableListOf() // List to track active bombs
 
-
     override fun create() {
-        val colorBlueSky = "#7382f7"
-        backgroundColor = Color.valueOf(colorBlueSky)
-
         batch = SpriteBatch()
         hudBatch = SpriteBatch()
 
-        BrickAssetloader(assetmanager).load()
+        BrickAssetloader(assetManager).load()
+        assetManager.finishLoading()
 
-        world = World(Vector2(0f, -1.0f), true)
-        bombPool = BombPool(world!!) // Initialize the bomb pool
+        world = World(Vector2(0f, -10f), true)
+
         debugRenderer = Box2DDebugRenderer()
 
         stage = Stage()
-        blimp = Blimp()
-        addMoveActionsToBlimp()
-        stage?.addActor(blimp)
-        canyon = Canyon(this, "canyon", assetmanager)
+
+        flyingMachine = FlyingMachine("plane.png", FlyingMachineDirection.LEFT_TO_RIGHT)
+        stage?.addActor(flyingMachine)
+        flyingMachine?.initBackandForthMovement()
+
+        canyon = Canyon(
+            world = world!!,
+            canyonStateListener = this,
+            canyonLayoutPattern = "canyon",
+            assetManager = assetManager)
         stage?.addActor(canyon)
+
+        bombPool = BombPool(world!!, stage!!)
 
         // Details state transitions
         val gameStateServiceImpl = GameStateServiceImpl(this)
@@ -67,48 +68,24 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
         frameRate = FrameRate()
     }
 
-    private fun addMoveActionsToBlimp() {
-        val blimpWidth = blimp!!.width
-        val screenHeight = Gdx.graphics.height.toFloat()
-
-        // Randomly generate the vertical position within the specified range
-        val startY = screenHeight * 0.7f
-        val endY = screenHeight * 0.8f
-        var randomY = startY + MathUtils.random() * (endY - startY)
-
-        blimp!!.setPosition(-blimpWidth, randomY)
-
-        val forth: MoveToAction = moveTo(Gdx.graphics.width.toFloat(), randomY, 7f)
-
-        // When the blimp reaches the right side, reset its position to the left
-        val reset: RunnableAction = Actions.run {
-            randomY = startY + MathUtils.random() * (endY - startY)
-            Gdx.app.log("","Moving to $randomY")
-            blimp!!.setPosition(-blimpWidth, randomY)
-        }
-
-        blimp!!.addAction(sequence(forth, reset, delay(1f), // Add a delay for better visibility
-            Actions.run { addMoveActionsToBlimp() }))  // Recursively call the function to repeat the behavior
-    }
-
-
-
     override fun render() {
         // Step the physics simulation
-        world!!.step(1 / 60f, 2, 1)
+        world!!.step(1 / 60f, 1, 1)
+
+        world!!.setContactListener(BombBrickContactListener())
 
         val iterator = activeBombs.iterator()
         while (iterator.hasNext()) {
             val bomb = iterator.next()
-            if (bomb.isOffScreen()) {
-                // Remove bomb from the stage, free it back to the pool, and remove from the active list
-                stage?.root?.removeActor(bomb)
+            val bombUserData = bomb.bombBody.userData as BombUserData
+            if (bombUserData.destroyed) {
+                bomb.isVisible = false
                 bombPool?.freeBomb(bomb)
                 iterator.remove()
             }
         }
 
-        Gdx.gl.glClearColor(backgroundColor!!.r, backgroundColor!!.g, backgroundColor!!.b, 1f)
+        Gdx.gl.glClearColor(backgroundColor.r, backgroundColor.g, backgroundColor.b, 1f)
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT)
         batch!!.begin()
 
@@ -133,20 +110,25 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     override fun gameStateChanged(gameState: GameState?) {
         // Obtain a bomb from the pool
         val bomb = bombPool?.obtainBomb()
+        if(bomb != null){
+            // Set the bomb's position and velocity as needed
+            val bombBody = bomb.bombBody
+            bombBody.isActive = true
+            val currentVerticalVelocity = bombBody.linearVelocity.y
 
-        // Set the bomb's position and velocity as needed
-        val bombBody = bomb?.bombBody
-        bombBody?.isActive = true
-        val currentVerticalVelocity = bombBody?.linearVelocity?.y ?: 0f
-        val horizontalVelocity = 0.2f // Adjust this value as needed
-        bombBody?.linearVelocity = Vector2(horizontalVelocity, currentVerticalVelocity)
-        bombBody?.setTransform(blimp!!.x / PIXELS_PER_METER, blimp!!.y / PIXELS_PER_METER, 0f)
-
-        bomb?.isVisible = true
-
-        // Add the bomb to the stage and the list of active bombs
-        stage?.addActor(bomb)
-        activeBombs.add(bomb!!)
+            var horizontalVelocity = 4f
+            if(flyingMachine?.flyingMachineDirection === FlyingMachineDirection.RIGHT_TO_LEFT){
+                horizontalVelocity *= -1
+                bomb.color = Color.BLACK
+            }
+            bombBody.linearVelocity = Vector2(horizontalVelocity, currentVerticalVelocity)
+            bomb.setPosition(flyingMachine!!.x, flyingMachine!!.y)
+            bombBody.setTransform(flyingMachine!!.x / PIXELS_PER_METER, flyingMachine!!.y / PIXELS_PER_METER, 0f)
+            // Add the bomb to the stage and the list of active bombs
+            activeBombs.add(bomb)
+        }else{
+            println("Huh?")
+        }
     }
 
     override fun canyonStateChanged(canyonState: CanyonState?, brick: Brick?, bomb: Bomb?) {

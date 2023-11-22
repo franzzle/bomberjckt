@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.graphics.Texture
 

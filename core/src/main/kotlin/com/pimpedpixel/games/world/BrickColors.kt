@@ -1,6 +1,7 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.graphics.Color
+import com.pimpedpixel.games.GameProperties
 
 internal class BrickColors {
     private val colorMap: MutableMap<Int, Color>;

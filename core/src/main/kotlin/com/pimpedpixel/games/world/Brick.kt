@@ -1,4 +1,4 @@
-package com.pimpedpixel.games
+package com.pimpedpixel.games.world
 
 import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
@@ -6,16 +6,16 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.math.Rectangle
+import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.utils.Disposable
 
-//Original canyonbomber field is 320x200
+//Original canyonbomber field is 320x200, the web version is designed for 640x480
 //Each brick was 8x8 pixels
-class Brick : Disposable {
+class Brick(val world: World) : Disposable {
     private var color: Color? = null
     private var textureBrick: Texture? = null
     private var brickSprite: Sprite? = null
     private var destroyed = false
-    private var textureCache: MutableMap<Color?, Texture?>? = null
     @JvmField
     var isOuterWall = false
     @JvmField
@@ -34,9 +34,31 @@ class Brick : Disposable {
     var brickColorTextureFileName: String? = null
 
     fun initGraphics(assetManager: AssetManager) {
-
         brickSprite = Sprite(assetManager.get(this.brickColorTextureFileName, BrickTexture::class.java).texture)
         brickSprite!!.setPosition(x.toFloat(), y.toFloat())
+
+        val bodyDef = BodyDef()
+        bodyDef.type = BodyDef.BodyType.StaticBody // Make it a static body
+        bodyDef.position.set(
+            x.toFloat() + brickSprite!!.width / 2,
+            y.toFloat() + brickSprite!!.height / 2
+        )
+
+        val shape = PolygonShape()
+        shape.setAsBox(
+            brickSprite!!.width / 2,
+            brickSprite!!.height / 2) // Set the shape of the brick
+
+        val fixtureDef = FixtureDef()
+        fixtureDef.shape = shape
+        fixtureDef.friction = 0f // Set friction to 0
+        fixtureDef.restitution = 0f // Set restitution to 0
+        // Create the Box2D body and attach the fixture
+        val body: Body = this.world.createBody(bodyDef)
+        body.createFixture(fixtureDef)
+        body.userData = this
+        // Dispose the shape
+        shape.dispose()
     }
 
     fun isDestroyed(): Boolean {
@@ -87,15 +109,5 @@ class Brick : Disposable {
 
     override fun hashCode(): Int {
         return row + column
-    }
-
-    companion object {
-        @JvmStatic
-        fun forColAndRow(colIndex: Int, rowIndex: Int): Brick {
-            val brick = Brick()
-            brick.column = colIndex
-            brick.row = rowIndex
-            return brick
-        }
     }
 }

@@ -2,7 +2,7 @@ package com.pimpedpixel.games.teavm;
 
 import com.github.xpenatan.gdx.backends.teavm.TeaApplicationConfiguration;
 import com.github.xpenatan.gdx.backends.teavm.TeaApplication;
-import com.pimpedpixel.games.BomberJcktGame;
+import com.pimpedpixel.games.world.BomberJcktGame;
 
 /**
  * Launches the TeaVM/HTML application.
