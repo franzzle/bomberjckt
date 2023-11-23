@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.utils.Disposable
 import com.badlogic.gdx.utils.TimeUtils
-import com.pimpedpixel.games.common.ScreenManager.Companion.getInstance
 
 class FrameRate : ApplicationAdapter(), Disposable {
     private val messageFont: BitmapFont
@@ -23,11 +22,10 @@ class FrameRate : ApplicationAdapter(), Disposable {
     init {
         lastTimeCounted = TimeUtils.millis()
         frameRate = Gdx.graphics.framesPerSecond.toFloat()
-        val fontNameWithoutExtension = "graphicpixel@" + getInstance()!!.scale + "x"
-        val handleFntFile = Gdx.files.internal("$fontNameWithoutExtension.fnt")
-        val handlePngFile = Gdx.files.internal("$fontNameWithoutExtension.png")
-        val FLIPPED = false
-        messageFont = BitmapFont(handleFntFile, handlePngFile, FLIPPED)
+        val handleFntFile = Gdx.files.internal("graphicpixel@1x.fnt")
+        val handlePngFile = Gdx.files.internal("graphicpixel@1x.png")
+        val flipped = false
+        messageFont = BitmapFont(handleFntFile, handlePngFile, flipped)
         val glyphLayout = GlyphLayout(messageFont, "00 FPS")
         precalculatedWidthFontMessage = glyphLayout.width
         precalculatedHeightFontMessage = glyphLayout.height

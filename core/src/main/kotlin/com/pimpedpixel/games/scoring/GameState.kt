@@ -1,7 +1,6 @@
 package com.pimpedpixel.games.scoring
 
 class GameState {
-    var isStarted = false
     var isFinished = false
     var isGameOverShownLongEnough = false
     var isPlayerAllowedToDropAnotherBomb = true

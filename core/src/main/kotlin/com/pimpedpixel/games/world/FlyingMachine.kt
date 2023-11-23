@@ -1,5 +1,6 @@
 package com.pimpedpixel.games.world
 
+import com.badlogic.ashley.signals.Signal
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
@@ -11,25 +12,25 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction
 import com.badlogic.gdx.scenes.scene2d.actions.RunnableAction
 import com.badlogic.gdx.utils.Disposable
+import com.pimpedpixel.games.gameplay.PlayerChoice
 
-class FlyingMachine(fileName: String,
-                    val flyingMachineDirection: FlyingMachineDirection
+class FlyingMachine(val flyingMachineDirection: FlyingMachineDirection, private val signal: Signal<PlayerChoice>
 ) : Actor(), Disposable {
     private val flyingMachineTexture: Texture
     private val flyingMachineSprite: Sprite
 
     init {
-        flyingMachineTexture = Texture(Gdx.files.internal(fileName))
+        flyingMachineTexture = Texture(Gdx.files.internal("plane.png"))
         flyingMachineSprite = Sprite(flyingMachineTexture)
         if(flyingMachineDirection === FlyingMachineDirection.RIGHT_TO_LEFT){
-            flip()
+            flyingMachineSprite.flip(true, false)
             flyingMachineSprite.setColor(Color.BLACK)
         }
         width = flyingMachineSprite.width
         height = flyingMachineSprite.height
     }
 
-    fun initBackandForthMovement() {
+    fun startMovement() {
         val blimpWidth = this.width
         val screenHeight = Gdx.graphics.height.toFloat()
 
@@ -61,10 +62,11 @@ class FlyingMachine(fileName: String,
                 this.setPosition(-blimpWidth, randomY)
             }
         }
+        val signalOtherPlayersTurn: RunnableAction = Actions.run {
+            this.signal.dispatch(PlayerChoice.PLAYER_B)
+        }
 
-        this.addAction(Actions.sequence(moveToAction, reset, Actions.run {
-            initBackandForthMovement()
-        }))
+        this.addAction(Actions.sequence(moveToAction, reset, signalOtherPlayersTurn))
     }
 
 
@@ -80,10 +82,4 @@ class FlyingMachine(fileName: String,
     override fun dispose() {
         flyingMachineTexture.dispose()
     }
-
-    fun flip() {
-        flyingMachineSprite.flip(true, false)
-    }
-
-
 }

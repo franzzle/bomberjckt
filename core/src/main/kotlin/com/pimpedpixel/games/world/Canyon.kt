@@ -43,12 +43,13 @@ class Canyon(
         canyonGrid.grid.forEachIndexed { rowIndex, row ->
             val bricks = ArrayList<Brick>()
             canyonLayout.add(bricks)
-            row.forEachIndexed { columnIndex, brickColorTextureFileName ->
+            row.forEachIndexed { columnIndex, charBrick ->
                 val brick = Brick(world)
                 brick.width = sizeOfSideOfOneBrick
                 brick.height = sizeOfSideOfOneBrick
-                brick.brickColorTextureFileName = brickColorTextureFileName
-                val outerWall = brickColorTextureFileName.equals("brickcolor0.png")
+                brick.brickColorTextureFileName = "brickcolor$charBrick.png"
+                brick.score = charBrick.toString().toInt()
+                val outerWall = charBrick == '0'
                 if (!outerWall) {
                     totalNumberOfDestroyableBricksInCanyon++
                 }

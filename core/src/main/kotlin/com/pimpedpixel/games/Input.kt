@@ -1,43 +1,40 @@
 package com.pimpedpixel.games
 
-import com.badlogic.gdx.Gdx
+import com.badlogic.ashley.core.Family
+import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputProcessor
-import com.badlogic.gdx.math.Vector2
+import com.pimpedpixel.games.gameplay.GamePhaseState
+import com.pimpedpixel.games.gameplay.GamePhaseStateComponent
 import com.pimpedpixel.games.scoring.GameStateService
-import com.pimpedpixel.games.scoring.GameStateServiceImpl
 
-class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor {
+class Input(private val engine: PooledEngine,
+            private val gameStateService: GameStateService) : InputProcessor {
+    private val gamePhaseStateComponentFamily: Family = Family.all(GamePhaseStateComponent::class.java).get()
     override fun keyDown(keycode: Int): Boolean {
         if (keycode == Input.Keys.SPACE) {
-            if (gameStateService.gameState.isStarted) {
-//                Gdx.app.log("", "Drop bomb")
-                dropBombIfAllowedTo()
-            } else {
-                startGame()
+            val entitiesFor = engine.getEntitiesFor(gamePhaseStateComponentFamily)
+            if(entitiesFor.size() > 0){
+                var gamePhaseState: GamePhaseStateComponent = entitiesFor
+                    .first()
+                    .getComponent(GamePhaseStateComponent::class.java)
+
+                when (gamePhaseState.gamePhaseState) {
+                    GamePhaseState.ATTRACT_SCREEN -> gamePhaseState.transitionToNextState()
+                    GamePhaseState.GAME_RUNNING -> {
+                        gameStateService.activateBomb()
+                    }
+                    GamePhaseState.GAME_OVER -> {
+                        // Handle some logic
+                        gamePhaseState.transitionToNextState()
+                    }
+                }
+                return true
             }
         }
         return false
     }
 
-    private fun startGame() {
-        Gdx.app.log("", "Start game")
-
-        if (!gameStateService.gameState.isStarted) {
-            gameStateService.resetGameState()
-        }
-        gameStateService.gameState.isStarted = true
-    }
-
-    private fun dropBombIfAllowedTo() {
-        if (gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb) {
-            gameStateService!!.activateBomb()
-        }
-    }
-
-    private fun throwBomb() {
-
-    }
 
     override fun keyUp(keycode: Int): Boolean {
         return false
@@ -48,18 +45,10 @@ class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor
     }
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-//        if (!game.paused) {
-//            dropBombIfAllowedTo()
-//            return true
-//        }
         return false
     }
 
     override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-//        if (!game.paused) {
-//            startGame()
-//            return true
-//        }
         return false
     }
 

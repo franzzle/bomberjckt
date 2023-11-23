@@ -55,9 +55,6 @@ class Bomb(world: World,
 
         val verticalPosition = bombBody.position.y * PIXELS_PER_METER
         bombSprite.setPosition(bombBody.position.x * PIXELS_PER_METER, verticalPosition)
-        if(verticalPosition < 0){
-            bombBody.setLinearVelocity(Vector2.Zero)
-        }
     }
 
     override fun draw(batch: Batch?, parentAlpha: Float) {
@@ -79,9 +76,9 @@ class Bomb(world: World,
         return "Bomb"
     }
 
-    //TODO Needs improvement
-    fun isOffScreen(): Boolean {
-        return bombSprite.y + bombSprite.height < 0
+    fun setInitialPosition(x: Float, y: Float){
+        this.setPosition(x, y)
+        this.bombBody.setTransform(x / PIXELS_PER_METER, y / PIXELS_PER_METER, 0f)
     }
 
     override fun setColor(color: Color){

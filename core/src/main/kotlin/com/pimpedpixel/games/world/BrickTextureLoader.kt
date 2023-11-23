@@ -14,8 +14,6 @@ import com.pimpedpixel.games.world.BrickTextureLoader.BrickTextureParameter
 
 class BrickTextureLoader(resolver: InternalFileHandleResolver?) :
     SynchronousAssetLoader<BrickTexture?, BrickTextureParameter?>(resolver) {
-    lateinit var brickTexture : BrickTexture
-
 
     override fun load(
         manager: AssetManager,

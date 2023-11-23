@@ -16,6 +16,9 @@ class Brick(val world: World) : Disposable {
     private var textureBrick: Texture? = null
     private var brickSprite: Sprite? = null
     private var destroyed = false
+
+    @JvmField
+    var score: Int = 0
     @JvmField
     var isOuterWall = false
     @JvmField
