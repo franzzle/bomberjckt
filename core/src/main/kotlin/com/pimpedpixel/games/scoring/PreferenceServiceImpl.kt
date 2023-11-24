@@ -7,7 +7,7 @@ class PreferenceServiceImpl : PreferenceService {
     protected var preferences: Preferences? = null
         protected get() {
             if (field == null) {
-                field = Gdx.app.getPreferences("valleybomber")
+                field = Gdx.app.getPreferences(BOMBER_JCK_PREF_KEY)
             }
             return field
         }

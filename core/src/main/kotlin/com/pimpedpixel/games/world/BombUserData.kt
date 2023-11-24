@@ -8,4 +8,11 @@ class BombUserData(
     var bricksHit: Int = 0,
     var outerWallHit: Int = 0,
     var destroyed: Boolean = false
-)
+) {
+    fun reset() {
+        thrownBy = PlayerChoice.UNDEFINED
+        bricksHit = 0
+        outerWallHit = 0
+        destroyed = false
+    }
+}

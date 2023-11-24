@@ -1,42 +1,33 @@
 package com.pimpedpixel.games.world
 
+import TransitionFromGameOverSystem
+import TransitionFromWhoWhonSystem
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.core.PooledEngine
 import com.badlogic.ashley.signals.Signal
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.GL20
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.badlogic.gdx.physics.box2d.World
 import com.badlogic.gdx.scenes.scene2d.Stage
-import com.pimpedpixel.games.Input
-import com.pimpedpixel.games.ScoringStateEnum
+import com.pimpedpixel.games.*
+import com.pimpedpixel.games.fx.ScreenShakeSystem
 import com.pimpedpixel.games.gameplay.*
+import com.pimpedpixel.games.gameplay.GamePhaseState.GAME_OVER
+import com.pimpedpixel.games.gameplay.GamePhaseState.GAME_RUNNING
 import com.pimpedpixel.games.gameplay.PlayerChoice.PLAYER_A
 import com.pimpedpixel.games.gameplay.PlayerChoice.PLAYER_B
-import com.pimpedpixel.games.hud.Alignment
-import com.pimpedpixel.games.hud.BlinkingSimpleMessage
-import com.pimpedpixel.games.hud.FrameRate
-import com.pimpedpixel.games.hud.SimpleMessage
-import com.pimpedpixel.games.scoring.GameState
-import com.pimpedpixel.games.scoring.GameStateListener
-import com.pimpedpixel.games.scoring.GameStateServiceImpl
 import com.pimpedpixel.games.world.FlyingMachineDirection.LEFT_TO_RIGHT
 import com.pimpedpixel.games.world.FlyingMachineDirection.RIGHT_TO_LEFT
 
 
 private const val TIME_STEP = 1 / 60f
 
-class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListener {
-    private var blinkingSimpleMessage: BlinkingSimpleMessage? = null
-    private var playerAMissesMessage: SimpleMessage? = null
-    private var playerBMissesMessage: SimpleMessage? = null
-    private var frameRate: FrameRate? = null
+class BomberJcktGame : ApplicationAdapter(), CanyonStateListener  {
     private var debugRenderer: Box2DDebugRenderer? = null
     private var engine: PooledEngine? = null
 
@@ -47,44 +38,48 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
     private var flyingMachinePlayerB: FlyingMachine? = null
 
     private var stage: Stage? = null
-    private var hudStage: Stage? = null
-
+    private var hudStage: HudStage? = null
 
     private val backgroundColor: Color = Color.valueOf("#7382f7")
     private val activeBombs: MutableList<Bomb> = mutableListOf() // List to track active bombs
-    private val assetManager: AssetManager = AssetManager()
 
-    private val gamePhaseStateComponent: GamePhaseStateComponent = GamePhaseStateComponent()
-    //TODO
-    // - Add a HUD with "Press space to start"
+    // TODO
     // - Make a json with brick properties that define color and score
 
     override fun create() {
-        BrickAssetloader(assetManager).load()
-        assetManager.finishLoading()
+        BrickAssetLoader().load()
+        BitmapFontLoader().load()
+        SoundLoader().load()
+        AssetManagerHolder.assetManager.finishLoading()
 
         world = World(Vector2(0f, -90f), true)
-        engine = PooledEngine()
-        engine!!.addEntity(Entity().add(gamePhaseStateComponent))
-        engine!!.addEntity(Entity().add(TurnComponent()))
-        engine!!.addEntity(Entity().add(PlayerStatisticsComponent(PLAYER_A)))
-        engine!!.addEntity(Entity().add(PlayerStatisticsComponent(PLAYER_B)))
-        val signal = Signal<PlayerChoice>()
-
-        debugRenderer = Box2DDebugRenderer()
 
         stage = Stage()
 
-        flyingMachinePlayerA = FlyingMachine(flyingMachineDirection = LEFT_TO_RIGHT, signal = signal)
-        stage?.addActor(flyingMachinePlayerA)
-        flyingMachinePlayerA!!.startMovement()
+        engine = PooledEngine()
+        engine!!.addSystem(ScreenShakeSystem(stage!!))
+        engine!!.addEntity(Entity().add(GamePhaseStateComponent()))
+        engine!!.addEntity(Entity().add(TurnComponent()))
+        engine!!.addEntity(Entity().add(PlayerStatisticsComponent(PLAYER_A)))
+        engine!!.addEntity(Entity().add(PlayerStatisticsComponent(PLAYER_B)))
 
-        flyingMachinePlayerB = FlyingMachine(flyingMachineDirection = RIGHT_TO_LEFT, signal = signal)
+        val playerChoiceSignal = Signal<PlayerChoice>()
+
+        debugRenderer = Box2DDebugRenderer()
+
+        flyingMachinePlayerA = FlyingMachine(flyingMachineDirection = LEFT_TO_RIGHT,
+            changePlayersTurnSignal = playerChoiceSignal,
+            PLAYER_A)
+        stage?.addActor(flyingMachinePlayerA)
+
+        flyingMachinePlayerB = FlyingMachine(
+            flyingMachineDirection = RIGHT_TO_LEFT,
+            changePlayersTurnSignal = playerChoiceSignal,
+            PLAYER_B)
         stage?.addActor(flyingMachinePlayerB)
 
-        signal.add(
+        playerChoiceSignal.add(
             TurnChangedListener(
-                engine!!,
                 flyingMachinePlayerA!!,
                 flyingMachinePlayerB!!
             )
@@ -92,33 +87,30 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
 
         canyon = Canyon(
             world = world!!,
-            canyonStateListener = this,
-            canyonLayoutPattern = "canyon",
-            assetManager = assetManager
+            canyonLayoutPattern = "canyon"
         )
         stage?.addActor(canyon)
 
         bombPool = BombPool(world!!, stage!!)
 
+        engine!!.addSystem(BombThrowingSystem(bombPool!!,
+            flyingMachinePlayerA,
+            flyingMachinePlayerB,
+            activeBombs))
+
+        engine!!.addSystem(TransitionFromGameOverSystem())
+        engine!!.addSystem(TransitionFromWhoWhonSystem())
+
         // Details state transitions
-        val gameStateServiceImpl = GameStateServiceImpl(this)
         val inputMultiplexer = InputMultiplexer()
-        inputMultiplexer.addProcessor(Input(engine!!, gameStateServiceImpl))
+        val throwBombSignal = Signal<GamePhaseState>()
+        throwBombSignal.add(BombThrowLogicListener(engine!!))
+        inputMultiplexer.addProcessor(Input(engine!!, throwBombSignal, playerChoiceSignal))
         Gdx.input.inputProcessor = inputMultiplexer
 
         ComponentHelper.initInstance(engine!!)
 
-        frameRate = FrameRate()
-        hudStage = Stage()
-        blinkingSimpleMessage = BlinkingSimpleMessage("Press space to start")
-
-        hudStage?.addActor(blinkingSimpleMessage)
-
-        playerAMissesMessage = SimpleMessage(Alignment.LEFT_BOTTOM)
-        hudStage?.addActor(playerAMissesMessage)
-
-        playerBMissesMessage = SimpleMessage(Alignment.RIGHT_BOTTOM)!!
-        hudStage?.addActor(playerBMissesMessage)
+        hudStage = HudStage()
     }
 
     override fun render() {
@@ -128,13 +120,12 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
         engine!!.update(Gdx.graphics.deltaTime)
 
         val playerAStats = ComponentHelper.retrievePlayerStatisticsComponent(PLAYER_A)
-        playerAMissesMessage?.setMessage("X".repeat(playerAStats!!.misses))
         val playerBStats = ComponentHelper.retrievePlayerStatisticsComponent(PLAYER_B)
-        playerBMissesMessage?.setMessage("X".repeat(playerBStats!!.misses))
 
-        if(playerAStats!!.misses >= 3 || playerBStats!!.misses >= 3){
-            val gamePhaseStateComponent = ComponentHelper.retrieveGamePhaseStateComponent()
-            gamePhaseStateComponent?.gamePhaseState = GamePhaseState.GAME_OVER
+        val gamePhaseStateComponent = ComponentHelper.retrieveGamePhaseStateComponent()
+        val gamePhaseState = gamePhaseStateComponent?.gamePhaseState
+        if(playerAStats.isOut && playerBStats.isOut && gamePhaseState == GAME_RUNNING) {
+            gamePhaseStateComponent?.gamePhaseState = GAME_OVER
         }
 
         val iterator = activeBombs.iterator()
@@ -154,16 +145,10 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
         stage?.act(Gdx.graphics.deltaTime)
         stage?.draw()
 
-        if (gamePhaseStateComponent.gamePhaseState !== GamePhaseState.ATTRACT_SCREEN) {
-            blinkingSimpleMessage?.isVisible = false
-        }
-        hudStage?.act(Gdx.graphics.deltaTime)
+        hudStage?.act()
         hudStage?.draw()
 
-        frameRate!!.update()
-        frameRate!!.render()
-
-        debugRenderer?.render(world, stage!!.camera.combined)
+//        debugRenderer?.render(world, stage!!.camera.combined)
     }
 
     override fun dispose() {
@@ -171,41 +156,7 @@ class BomberJcktGame : ApplicationAdapter(), CanyonStateListener, GameStateListe
         hudStage?.dispose()
         world?.dispose()
         debugRenderer?.dispose()
-        assetManager.dispose()
-    }
-
-    override fun gameStateChanged(gameState: GameState?) {
-        // Obtain a bomb from the pool
-        val bomb = bombPool?.obtainBomb()
-        if (bomb != null) {
-            // Set the bomb's position and velocity as needed
-            val bombBody = bomb.bombBody
-            bombBody.isActive = true
-            val currentVerticalVelocity = bombBody.linearVelocity.y
-            val horizontalVelocity = 20f
-
-            val turnComponent = ComponentHelper.retrieveTurnComponent()
-            (bombBody.userData as BombUserData).thrownBy = turnComponent.playerChoice
-
-            when(turnComponent.playerChoice) {
-                PLAYER_A -> {
-                    bombBody.linearVelocity = Vector2(horizontalVelocity, currentVerticalVelocity)
-                    bomb.setInitialPosition(flyingMachinePlayerA!!.x, flyingMachinePlayerA!!.y)
-                    bomb.color = Color.WHITE
-                }
-                PLAYER_B -> {
-                    bombBody.linearVelocity = Vector2(-horizontalVelocity, currentVerticalVelocity)
-                    bomb.setInitialPosition(flyingMachinePlayerB!!.x, flyingMachinePlayerB!!.y)
-                    bomb.color = Color.BLACK
-                }
-                PlayerChoice.UNDEFINED -> Gdx.app.log("", "Nobodies turn yet")
-            }
-
-            // Add the bomb to the stage and the list of active bombs
-            activeBombs.add(bomb)
-        } else {
-            println("Huh?")
-        }
+        AssetManagerHolder.assetManager.dispose()
     }
 
     override fun canyonStateChanged(canyonState: CanyonState?, brick: Brick?, bomb: Bomb?) {

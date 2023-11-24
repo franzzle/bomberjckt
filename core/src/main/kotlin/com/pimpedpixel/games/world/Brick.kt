@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.Sprite
-import com.badlogic.gdx.math.Rectangle
 import com.badlogic.gdx.physics.box2d.*
 import com.badlogic.gdx.utils.Disposable
 
@@ -16,6 +15,7 @@ class Brick(val world: World) : Disposable {
     private var textureBrick: Texture? = null
     private var brickSprite: Sprite? = null
     private var destroyed = false
+    private var destroyedFromTheStart = false
 
     @JvmField
     var score: Int = 0
@@ -37,6 +37,7 @@ class Brick(val world: World) : Disposable {
     var brickColorTextureFileName: String? = null
 
     fun initGraphics(assetManager: AssetManager) {
+        updatePosition(row * width, column * height)
         brickSprite = Sprite(assetManager.get(this.brickColorTextureFileName, BrickTexture::class.java).texture)
         brickSprite!!.setPosition(x.toFloat(), y.toFloat())
 
@@ -50,7 +51,7 @@ class Brick(val world: World) : Disposable {
         val shape = PolygonShape()
         shape.setAsBox(
             brickSprite!!.width / 2,
-            brickSprite!!.height / 2) // Set the shape of the brick
+            brickSprite!!.height / 2)
 
         val fixtureDef = FixtureDef()
         fixtureDef.shape = shape
@@ -76,13 +77,22 @@ class Brick(val world: World) : Disposable {
         }
     }
 
+    fun setDestroyedFromTheStart(destroyedFromTheStart: Boolean) {
+        this.destroyedFromTheStart = destroyedFromTheStart
+        this.destroyed = destroyedFromTheStart
+    }
+
+    fun isDestroyedFromTheStart(): Boolean {
+        return destroyedFromTheStart
+    }
+
     fun draw(batch: Batch?) {
         if (!isDestroyed()) {
             brickSprite!!.draw(batch)
         }
     }
 
-    fun updatePosition(x: Int, y: Int) {
+    private fun updatePosition(x: Int, y: Int) {
         this.x = x
         this.y = y
     }
@@ -90,9 +100,6 @@ class Brick(val world: World) : Disposable {
     override fun dispose() {
         textureBrick!!.dispose()
     }
-
-    val boundingRectangle: Rectangle
-        get() = Rectangle(brickSprite!!.x, brickSprite!!.y, brickSprite!!.width, brickSprite!!.height)
 
     fun setColor(color: Color?) {
         this.color = color
@@ -102,10 +109,10 @@ class Brick(val world: World) : Disposable {
         return color
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val brick = o as Brick
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val brick = other as Brick
         return row == brick.row &&
                 column == brick.column
     }

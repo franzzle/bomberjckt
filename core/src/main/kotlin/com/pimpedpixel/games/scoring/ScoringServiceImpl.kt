@@ -3,11 +3,13 @@ package com.pimpedpixel.games.scoring
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Preferences
 
+private const val HIGHSCORE_PREF_KEY = "highScore"
+
 open class ScoringServiceImpl : ScoringService {
     private var preferences: Preferences? = null
         get() {
             if (field == null) {
-                field = Gdx.app.getPreferences("valleybomber")
+                field = Gdx.app.getPreferences(BOMBER_JCK_PREF_KEY)
             }
             return field
         }
@@ -33,7 +35,4 @@ open class ScoringServiceImpl : ScoringService {
             preferences!!.getInteger(HIGHSCORE_PREF_KEY)
         } else null
 
-    companion object {
-        private const val HIGHSCORE_PREF_KEY = "highscore"
-    }
 }

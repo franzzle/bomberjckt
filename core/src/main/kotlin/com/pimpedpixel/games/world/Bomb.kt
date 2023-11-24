@@ -67,11 +67,6 @@ class Bomb(world: World,
         bombSprite.texture.dispose()
     }
 
-    val boundingRectangle: Rectangle
-        get() = Rectangle(bombSprite.x, bombSprite.y, bombSprite.width, bombSprite.height)
-
-
-
     override fun toString(): String {
         return "Bomb"
     }

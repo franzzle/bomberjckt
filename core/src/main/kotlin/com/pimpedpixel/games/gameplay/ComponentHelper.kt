@@ -24,12 +24,12 @@ class ComponentHelper private constructor(private val engine: PooledEngine) {
         }
 
         @JvmStatic
-        fun retrieveGamePhaseStateComponent(): GamePhaseStateComponent? {
+        fun retrieveGamePhaseStateComponent(): GamePhaseStateComponent {
             val entitiesFor = instance?.engine?.getEntitiesFor(Family.all(GamePhaseStateComponent::class.java).get())
             if (entitiesFor != null && entitiesFor.size() > 0) {
                 return entitiesFor.first().getComponent(GamePhaseStateComponent::class.java)
             }
-            return null
+            throw GdxRuntimeException("No TurnComponent found")
         }
 
         @JvmStatic
@@ -42,7 +42,7 @@ class ComponentHelper private constructor(private val engine: PooledEngine) {
         }
 
         @JvmStatic
-        fun retrievePlayerStatisticsComponent(playerChoice: PlayerChoice): PlayerStatisticsComponent? {
+        fun retrievePlayerStatisticsComponent(playerChoice: PlayerChoice): PlayerStatisticsComponent {
             val entitiesFor = instance?.engine?.getEntitiesFor(Family.all(PlayerStatisticsComponent::class.java).get())
             if (entitiesFor != null) {
                 val iterator = entitiesFor.iterator()
@@ -53,9 +53,8 @@ class ComponentHelper private constructor(private val engine: PooledEngine) {
                         return playerStatsComponent
                     }
                 }
-
             }
-            return null
+            throw GdxRuntimeException("No Player Stats found")
         }
 
     }

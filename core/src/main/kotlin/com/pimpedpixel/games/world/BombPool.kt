@@ -14,7 +14,7 @@ class BombPool(private val world: World, stage: Stage) {
         // Initialize the bomb pool with 20 bombs
         for (i in 0 until 10) {
             val bomb = createBomb(i)
-            stage.addActor(bomb);
+            stage.addActor(bomb)
             bombList.add(bomb)
         }
     }
@@ -31,7 +31,7 @@ class BombPool(private val world: World, stage: Stage) {
             resetBomb(bomb)
             return bomb
         }
-        return null;
+        return null
     }
 
     fun freeBomb(bomb: Bomb) {
@@ -46,10 +46,7 @@ class BombPool(private val world: World, stage: Stage) {
         bombBody.isActive = false
         bombBody.linearVelocity = Vector2.Zero
         val bombUserData = bombBody.userData as BombUserData
-        bombUserData.destroyed = false
-        bombUserData.outerWallHit = 0
-        bombUserData.bricksHit = 0
-        bombUserData.thrownBy = PlayerChoice.UNDEFINED
+        bombUserData.reset()
         bomb.color = Color.WHITE
         bomb.setPosition(-100f, -100f) // Set the position off-screen
     }
