@@ -1,11 +1,6 @@
 package com.pimpedpixel.games.world
 
-import com.pimpedpixel.games.GameProperties
-
-class CanyonGrid(
-    private var layout: CanyonLayout,
-    private var colorProperties: GameProperties
-) {
+class CanyonGrid(private var layout: CanyonLayout) {
     val grid: Array<Array<Char?>> = Array(layout.width) { Array(layout.height) { null } }
 
     init {

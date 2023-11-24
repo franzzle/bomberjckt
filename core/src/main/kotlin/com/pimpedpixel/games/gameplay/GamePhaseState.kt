@@ -3,5 +3,6 @@ package com.pimpedpixel.games.gameplay
 enum class GamePhaseState {
     ATTRACT_SCREEN,
     GAME_RUNNING,
-    GAME_OVER
+    GAME_OVER,
+    WHO_WON
 }

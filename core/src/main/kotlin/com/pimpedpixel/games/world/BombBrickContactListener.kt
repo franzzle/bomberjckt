@@ -8,18 +8,18 @@ import com.badlogic.gdx.physics.box2d.Contact
 import com.badlogic.gdx.physics.box2d.ContactImpulse
 import com.badlogic.gdx.physics.box2d.ContactListener
 import com.badlogic.gdx.physics.box2d.Manifold
+import com.pimpedpixel.games.AssetManagerHolder
+import com.pimpedpixel.games.SoundPlayer
+import com.pimpedpixel.games.fx.ScreenShakeStarter
 import com.pimpedpixel.games.gameplay.PlayerStatisticsComponent
 
 class BombBrickContactListener(private var engine: PooledEngine) : ContactListener {
-    private val brickDestroyedSound: Sound
     private val playerStatsComponentFamily: Family = Family.all(PlayerStatisticsComponent::class.java).get()
 
     // Add a HashMap to keep track of previous collisions
     private val previousCollisions = HashMap<Pair<BombUserData, Brick>, Boolean>()
 
-    init {
-        brickDestroyedSound = Gdx.audio.newSound(Gdx.files.internal("sounds/bigexplode.wav"))
-    }
+
 
     override fun beginContact(contact: Contact) {
         // This method is called when two fixtures start to overlap (collide).
@@ -68,12 +68,11 @@ class BombBrickContactListener(private var engine: PooledEngine) : ContactListen
                 bombUserData.bricksHit++
                 recordMissesAndScore(playerStatisticsComponent, bombUserData, brick)
             }
-            if(bombUserData.bricksHit == 1){
-                brickDestroyedSound.play()
+            if(bombUserData.bricksHit == 1 && brick.isOuterWall.not()){
+                SoundPlayer.playBombSound()
+                engine.addEntity(engine.createEntity().apply { add(ScreenShakeStarter()) })
             }
         }
-
-
 //        Gdx.app.log(this.javaClass.simpleName, "Bomb ${bombUserData.index} collided ${bombUserData.bricksHit} times with a brick")
     }
 

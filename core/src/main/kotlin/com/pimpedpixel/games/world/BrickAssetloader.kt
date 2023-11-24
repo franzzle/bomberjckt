@@ -1,10 +1,11 @@
 package com.pimpedpixel.games.world
 
-import com.badlogic.gdx.assets.AssetManager
 import com.badlogic.gdx.assets.loaders.resolvers.InternalFileHandleResolver
+import com.pimpedpixel.games.AssetManagerHolder
 
-class BrickAssetloader(val assetManager: AssetManager) {
+class BrickAssetLoader() {
     fun load(){
+        val assetManager = AssetManagerHolder.assetManager
         assetManager.setLoader(BrickTexture::class.java, BrickTextureLoader(InternalFileHandleResolver()))
         BrickColors().getPossibleColors().forEach { brickColorFilename ->
             assetManager.load(
@@ -12,6 +13,5 @@ class BrickAssetloader(val assetManager: AssetManager) {
                 BrickTextureLoader.BrickTextureParameter()
             )
         }
-
     }
 }

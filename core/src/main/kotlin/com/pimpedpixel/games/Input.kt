@@ -2,31 +2,37 @@ package com.pimpedpixel.games
 
 import com.badlogic.ashley.core.Family
 import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.ashley.signals.Signal
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputProcessor
 import com.pimpedpixel.games.gameplay.GamePhaseState
 import com.pimpedpixel.games.gameplay.GamePhaseStateComponent
-import com.pimpedpixel.games.scoring.GameStateService
+import com.pimpedpixel.games.gameplay.PlayerChoice
 
 class Input(private val engine: PooledEngine,
-            private val gameStateService: GameStateService) : InputProcessor {
+            private val signalGamePhaseState: Signal<GamePhaseState>,
+            private val playerChoiceSignal : Signal<PlayerChoice>,
+            ) : InputProcessor {
     private val gamePhaseStateComponentFamily: Family = Family.all(GamePhaseStateComponent::class.java).get()
     override fun keyDown(keycode: Int): Boolean {
         if (keycode == Input.Keys.SPACE) {
             val entitiesFor = engine.getEntitiesFor(gamePhaseStateComponentFamily)
             if(entitiesFor.size() > 0){
-                var gamePhaseState: GamePhaseStateComponent = entitiesFor
+                val gamePhaseStateComponent: GamePhaseStateComponent = entitiesFor
                     .first()
                     .getComponent(GamePhaseStateComponent::class.java)
 
-                when (gamePhaseState.gamePhaseState) {
-                    GamePhaseState.ATTRACT_SCREEN -> gamePhaseState.transitionToNextState()
-                    GamePhaseState.GAME_RUNNING -> {
-                        gameStateService.activateBomb()
+                when (gamePhaseStateComponent.gamePhaseState) {
+                    GamePhaseState.ATTRACT_SCREEN -> {
+                        SoundPlayer.playStartSound()
+                        playerChoiceSignal.dispatch(PlayerChoice.PLAYER_A)
+                        gamePhaseStateComponent.transitionToNextState()
                     }
-                    GamePhaseState.GAME_OVER -> {
-                        // Handle some logic
-                        gamePhaseState.transitionToNextState()
+                    GamePhaseState.GAME_RUNNING -> {
+                        signalGamePhaseState.dispatch(gamePhaseStateComponent.gamePhaseState)
+                    }
+                    else -> {
+                        // It's OK
                     }
                 }
                 return true

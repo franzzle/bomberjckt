@@ -7,10 +7,11 @@ class GamePhaseStateComponent : Component {
 
     // Helper method to transition to the next state
     fun transitionToNextState() {
-        when (gamePhaseState) {
-            GamePhaseState.ATTRACT_SCREEN -> gamePhaseState = GamePhaseState.GAME_RUNNING
-            GamePhaseState.GAME_RUNNING -> gamePhaseState = GamePhaseState.GAME_OVER
-            GamePhaseState.GAME_OVER -> gamePhaseState = GamePhaseState.ATTRACT_SCREEN
+        gamePhaseState = when (gamePhaseState) {
+            GamePhaseState.ATTRACT_SCREEN -> GamePhaseState.GAME_RUNNING
+            GamePhaseState.GAME_RUNNING -> GamePhaseState.GAME_OVER
+            GamePhaseState.GAME_OVER -> GamePhaseState.WHO_WON
+            GamePhaseState.WHO_WON -> GamePhaseState.ATTRACT_SCREEN
         }
     }
 }

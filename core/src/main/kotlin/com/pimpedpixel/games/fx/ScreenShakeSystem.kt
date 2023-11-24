@@ -1,50 +1,41 @@
 package com.pimpedpixel.games.fx
 
-import com.badlogic.ashley.core.Engine
 import com.badlogic.ashley.core.Entity
-import com.badlogic.ashley.core.EntitySystem
 import com.badlogic.ashley.core.Family
-import com.badlogic.ashley.utils.ImmutableArray
-import com.badlogic.gdx.Gdx
+import com.badlogic.ashley.systems.IteratingSystem
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.math.MathUtils
-import com.pimpedpixel.games.CameraComponent
+import com.badlogic.gdx.math.Vector3
+import com.badlogic.gdx.scenes.scene2d.Stage
 
-class ScreenShakeSystem : EntitySystem() {
+class ScreenShakeSystem(private val stage: Stage) : IteratingSystem(Family.all(ScreenShakeStarter::class.java).get()) {
     private var elapsed = 0f
-    private var stopped = false
-    private var entities: ImmutableArray<Entity>? = null
+    private val originalPosition: Vector3 = Vector3(stage.camera.position)
 
-    //TODO Fill from properties
+    // TODO Fill from properties
     private val duration = 0.5f
     private val intensity = 2f
 
-    override fun addedToEngine(engine: Engine?) {
-        entities = engine?.getEntitiesFor(Family.all(CameraComponent::class.java).get())
-    }
+    override fun processEntity(entity: Entity, deltaTime: Float) {
+        val orthographicCamera = stage.camera as OrthographicCamera
 
-    override fun update(deltaTime: Float) {
-        // Get the camera component from your Ashley entities.
-        val cameraComponent: CameraComponent = entities?.first()?.getComponent(CameraComponent::class.java) ?: return
-
-        if (elapsed < duration && !stopped) {
+        if (elapsed < duration) {
             val amountOfShakeAmplitudeInterpolation =
                 intensity * ((duration - elapsed) / duration)
             val x = (MathUtils.random.nextFloat() - 0.5f) * amountOfShakeAmplitudeInterpolation
             val y = (MathUtils.random.nextFloat() - 0.5f) * amountOfShakeAmplitudeInterpolation
 
-            cameraComponent.camera.translate(-x, -y)
+            orthographicCamera.translate(-x, -y)
 
             elapsed += deltaTime
         } else {
-            stopped = true
-            resetCamInOriginalPosition(cameraComponent.camera)
+            elapsed = 0f
+            resetCamInOriginalPosition(orthographicCamera)
+            entity.remove(ScreenShakeStarter::class.java)
         }
     }
 
     private fun resetCamInOriginalPosition(camera: OrthographicCamera) {
-        camera.position.set(Gdx.graphics.width * 0.5f, Gdx.graphics.height * 0.5f, 0f)
+        camera.position.set(originalPosition.x, originalPosition.y, originalPosition.z)
     }
-
-
 }
