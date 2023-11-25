@@ -40,7 +40,7 @@ class HudStage(): Stage() {
         addActor(gameOverBlinkingMessage)
         addActor(whichPlayerWonMessage)
 
-        addActor(FrameRateActor())
+//        addActor(FrameRateActor())
     }
 
     override fun act() {
