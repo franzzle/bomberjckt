@@ -5,19 +5,23 @@ import kotlin.math.ln
 private const val LEADING_ZEROES = 6
 
 object ScoreFormatter {
-    @JvmStatic
-    fun toScoreWithLeadingZeroes(prefix: String?, score: Int): String {
-        val prefixOrDefault = prefix ?: "Score"
-        val intToStringWithLeadingZeroes = intToStringWithLeadingZeroes(score)
-        return "$prefixOrDefault : $intToStringWithLeadingZeroes"
-    }
+    private val stringBuilder = StringBuilder(LEADING_ZEROES)
 
-    private fun intToStringWithLeadingZeroes(num: Int): String {
-        val resultingPrefixedScore = StringBuffer(LEADING_ZEROES)
-        val zeroes = LEADING_ZEROES - (ln(num.toDouble()) / ln(10.0)).toInt() - 1
-        for (i in 0 until zeroes) {
-            resultingPrefixedScore.append(0)
+    @JvmStatic
+    fun intToStringWithLeadingZeroes(num: Int): String {
+        stringBuilder.clear() // Clear the StringBuilder for reuse
+
+        return if (num == 0) {
+            // Handle the special case when num is 0
+            "0".padStart(LEADING_ZEROES, '0')
+        } else {
+            val zeroes = LEADING_ZEROES - (ln(num.toDouble()) / ln(10.0)).toInt() - 1
+            for (i in 0 until zeroes) {
+                stringBuilder.append('0')
+            }
+            stringBuilder.append(num)
+            stringBuilder.toString()
         }
-        return resultingPrefixedScore.append(num).toString()
     }
 }
+

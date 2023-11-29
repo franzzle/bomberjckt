@@ -1,0 +1,28 @@
+{
+  "levels": [
+    {
+      "level": 1,
+      "description": "Multiplayer phase",
+      "allowedBombs": 1,
+      "music" : "bgmusic_1",
+      "allowedMisses" : 2,
+      "horizontalVelocity" : 20,
+      "bricksDestroyedWithOneBomb": 3,
+      "timeLimits" : false,
+      "timeLimitInSeconds" : -1,
+      "canyonLayoutName" : "canyonempty"
+    },
+    {
+      "level": 2,
+      "description": "Challenge phase",
+      "allowedBombs": 10,
+      "music" : "bgmusic_1",
+      "allowedMisses" : -1,
+      "horizontalVelocity" : 20,
+      "bricksDestroyedWithOneBomb": 3,
+      "timeLimits" : true,
+      "timeLimitInSeconds" : 120,
+      "canyonLayoutName" : "canyon2"
+    }
+  ]
+}

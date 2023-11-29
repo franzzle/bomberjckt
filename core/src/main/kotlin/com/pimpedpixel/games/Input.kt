@@ -1,48 +1,46 @@
 package com.pimpedpixel.games
 
-import com.badlogic.gdx.Gdx
+import com.badlogic.ashley.core.Family
+import com.badlogic.ashley.core.PooledEngine
+import com.badlogic.ashley.signals.Signal
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputProcessor
-import com.badlogic.gdx.math.Vector2
-import com.pimpedpixel.games.scoring.GameStateService
-import com.pimpedpixel.games.scoring.GameStateServiceImpl
+import com.pimpedpixel.games.gameplay.GamePhaseState
+import com.pimpedpixel.games.gameplay.GamePhaseStateComponent
+import com.pimpedpixel.games.gameplay.PlayerChoice
 
-class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor {
+class Input(private val engine: PooledEngine,
+            private val signalGamePhaseState: Signal<GamePhaseState>,
+            private val playerChoiceSignal : Signal<PlayerChoice>,
+            ) : InputProcessor {
+    private val gamePhaseStateComponentFamily: Family = Family.all(GamePhaseStateComponent::class.java).get()
     override fun keyDown(keycode: Int): Boolean {
         if (keycode == Input.Keys.SPACE) {
-            if (gameStateService.gameState.isStarted) {
-                Gdx.app.log("", "Drop bomb")
-//                dropBombIfAllowedTo()
-            } else {
-                startGame()
+            val entitiesFor = engine.getEntitiesFor(gamePhaseStateComponentFamily)
+            if(entitiesFor.size() > 0){
+                val gamePhaseStateComponent: GamePhaseStateComponent = entitiesFor
+                    .first()
+                    .getComponent(GamePhaseStateComponent::class.java)
+
+                when (gamePhaseStateComponent.gamePhaseState) {
+                    GamePhaseState.ATTRACT_SCREEN -> {
+                        SoundPlayer.playStartSound()
+                        playerChoiceSignal.dispatch(PlayerChoice.PLAYER_A)
+                        gamePhaseStateComponent.transitionToNextState()
+                    }
+                    GamePhaseState.GAME_RUNNING -> {
+                        signalGamePhaseState.dispatch(gamePhaseStateComponent.gamePhaseState)
+                    }
+                    else -> {
+                        // It's OK
+                    }
+                }
+                return true
             }
         }
         return false
     }
 
-    private fun startGame() {
-        Gdx.app.log("", "Start game")
-
-        if (!gameStateService.gameState.isStarted) {
-            gameStateService.resetGameState()
-        }
-        gameStateService.gameState.isStarted = true
-    }
-
-    private fun dropBombIfAllowedTo() {
-//        if (game.gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb) {
-//            throwBomb()
-//            game.gameStateService!!.gameState.isPlayerAllowedToDropAnotherBomb = false
-//        }
-    }
-
-    private fun throwBomb() {
-//        val bombSpawnPosition = Vector2(
-//            game.blimp!!.x + game.blimp!!.width * 0.5f,
-//            game.blimp!!.y + game.blimp!!.height * 0.5f
-//        )
-//        game.bomb!!.bombThrown(bombSpawnPosition, game.blimp!!.direction)
-    }
 
     override fun keyUp(keycode: Int): Boolean {
         return false
@@ -53,18 +51,10 @@ class Input(private val gameStateService: GameStateServiceImpl) : InputProcessor
     }
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-//        if (!game.paused) {
-//            dropBombIfAllowedTo()
-//            return true
-//        }
         return false
     }
 
     override fun touchUp(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
-//        if (!game.paused) {
-//            startGame()
-//            return true
-//        }
         return false
     }
 
